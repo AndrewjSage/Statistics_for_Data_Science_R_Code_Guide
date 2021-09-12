@@ -16,7 +16,7 @@ github-repo: rstudio/bookdown-demo
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE, cache=FALSE)
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE, cache=TRUE)
 ```
 
 
@@ -33,7 +33,7 @@ If you want to work with R from your own computer, you can install it for free u
 1. To install R, click the [link](https://mirror.las.iastate.edu/CRAN/). 
 2. Choose the version appropriate for your system.   
 
-```{r, echo=FALSE, out.width = '50%'}
+```{r, echo=FALSE, out.width = '75%'}
 knitr::include_graphics("Install1.png")
 ```
 
@@ -41,13 +41,13 @@ knitr::include_graphics("Install1.png")
 
 Mac: 
 
-```{r, echo=FALSE, out.width = '50%'}
+```{r, echo=FALSE, out.width = '75%'}
 knitr::include_graphics("Mac_install.png")
 ```
 
 Windows:  
 
-```{r, echo=FALSE, out.width = '50%'}
+```{r, echo=FALSE, out.width = '75%'}
 knitr::include_graphics("PC_install.png")
 ```
 
@@ -58,7 +58,7 @@ knitr::include_graphics("PC_install.png")
 1. To install R Studio, click the [link](https://rstudio.com/products/rstudio/download/#download). 
 2. Download the version of RStudio Desktop appropriate for you. This is suggested in step 2. 
 
-```{r, echo=FALSE, out.width = '50%'}
+```{r, echo=FALSE, out.width = '75%'}
 knitr::include_graphics("RStudio_Install.png")
 ```
 
@@ -87,6 +87,9 @@ We'll begin by loading the `tidyverse` package, which can be used to create prof
 library(tidyverse)
 ```
 
+```{r, echo=FALSE}
+select <- dplyr::select
+```
 
 ## Section 1.1: Reading in Data
 
@@ -1899,8 +1902,13 @@ Train_sc <- Train %>% mutate_if(is.numeric, scale)
 
 We can perform ridge regression using the `lm.ridge()` command in  the `MASS` package. 
 
-```{r, cache=FALSE}
+```{r}
 library(MASS)
+```
+
+
+```{r, echo=FALSE}
+select <- dplyr::select
 ```
 
 ```{r}
