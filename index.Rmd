@@ -1,0 +1,2010 @@
+--- 
+title: "Statistics for Data Science R Code Guide"
+author: "Andrew Sage - Stat 255, Lawrence University"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+documentclass: book
+bibliography: [book.bib, packages.bib]
+# url: your book url like https://bookdown.org/yihui/bookdown
+# cover-image: path to the social sharing image like images/cover.jpg
+description: |
+  This is a minimal example of using the bookdown package to write a book.
+  The HTML output format for this example is bookdown::gitbook,
+  set in the _output.yml file.
+link-citations: yes
+github-repo: rstudio/bookdown-demo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE, cache=FALSE)
+```
+
+
+# Preface {-}
+
+This guide provides details and examples on using R to perform the kinds of statistical analyses that we'll use in STAT 255. You may use it as a template, as you write code for your assignments. 
+
+## Installing R and RStudio
+
+If you want to work with R from your own computer, you can install it for free using the directions below. This will allow you to work on your assignments whenever and wherever you would like. 
+
+### Installing RStudio
+
+1. To install R, click the [link](https://mirror.las.iastate.edu/CRAN/). 
+2. Choose the version appropriate for your system.   
+
+```{r, echo=FALSE, out.width = '50%'}
+knitr::include_graphics("Install1.png")
+```
+
+3. Download R version 4.1.1. 
+
+Mac: 
+
+```{r, echo=FALSE, out.width = '50%'}
+knitr::include_graphics("Mac_install.png")
+```
+
+Windows:  
+
+```{r, echo=FALSE, out.width = '50%'}
+knitr::include_graphics("PC_install.png")
+```
+
+4. Install R version 4.1.1 on your computer.    
+
+### Installing R Studio
+
+1. To install R Studio, click the [link](https://rstudio.com/products/rstudio/download/#download). 
+2. Download the version of RStudio Desktop appropriate for you. This is suggested in step 2. 
+
+```{r, echo=FALSE, out.width = '50%'}
+knitr::include_graphics("RStudio_Install.png")
+```
+
+3. Install RStudio on your computer. 
+
+The following chapters walk you through the important tasks you'll perform in this class. I will continue to add to this document as the course progresses. 
+
+### Using R on Lawrence's Lab Computers
+
+R is also installed in many computer labs on campus, including Briggs 421. If using R from a computer lab, be sure to work from the desktop version. Be aware that there is also a browser version of RStudio at Lawrence (Rstudio.lawrence.edu), which you may have used in other classes. We will NOT use this version in this class. It is not updated as frequently, and is ill-equipped to handle the kind of computations we will need to perform in this class. 
+
+
+# Exploratory Data Analysis
+
+This chapter describes how to load data into R, and explore its properties. The purpose of an exploratory data analysis (EDA) is to learn about the nature of the data, and to become aware of any surprising characteristics or anomalies that might impact our analysis and conclusions. An EDA typically involves calculating summary statistics, and creating graphs and tables that help us explore the data. It does not involve more advanced techniques, such as modeling, but rather helps set the stage for these to be done effectively. 
+
+As you explore the data, look for: 
+
+1. Missing values     
+2. Unusual observations      
+3. Misspecified variable types
+
+We'll begin by loading the `tidyverse` package, which can be used to create professional graphics, and wrangle (or manipulate) data into forms that are informative and easy to work with. 
+
+```{r}
+library(tidyverse)
+```
+
+
+## Section 1.1: Reading in Data
+
+There are many ways to read data into R. We'll look at how to read data from common .csv, .txt, and .xlsx files, as well as how to load data that is already part of an R package. Knowing how to read data in these formats is sufficient for this class, however, there are other data formats that can be read into R. If you find yourself working with data in other forms, there are plenty of online resources available. 
+
+
+### Read data from a local file on your computer. 
+
+If the data are in a .csv, .txt, .xlsx, or .xls file on your computer, make sure that the file is in the same directory as your .Rmd file, and that this is set as your working directory. The easiest way to accomplish this is by using an R Project. Then, read in the data, using `read_csv()` for .csv files, `read_delim` for .txt files, or `read_excel` for .xlsx or .xls files. 
+
+The filename goes in quotes inside the read function. The name on the left is the name you will give the dataset. You will use this to refer to the data in all future commands. The `<-` is called an *assignment operator*. It assigns the dataset you have read in to the name you are giving it.
+
+###  Reading Data from a Directory on Your Computer
+```{r, eval=FALSE}
+HollywoodMovies <- read.csv("HollywoodMovies.csv")
+```
+
+```{r, eval=FALSE}
+HollywoodMovies <- read.delim("HollywoodMovies.txt")
+```
+
+Reading in excel files requires loading the `readxl` package. 
+
+```{r, eval=FALSE}
+library(readxl)
+HollywoodMovies <- read.excel("HollywoodMovies.xlsx")
+```
+
+### Read data from the web
+
+If reading data from the web, be sure to specify the entire url. 
+
+```{r}
+HollywoodMovies <- read.csv("https://www.lock5stat.com/datapage2e/HollywoodMovies.csv")
+```
+
+```{r}
+HollywoodMovies <- read.csv("https://www.lock5stat.com/datapage2e/HollywoodMovies.txt")
+```
+
+
+```{r, eval=FALSE}
+library(readxl)
+HollywoodMovies <- read.csv("https://www.lock5stat.com/datapage2e/HollywoodMovies.xlsx")
+```
+
+
+### Load data already included in R package
+
+If the dataset is already available in an R package, load that package and read in the data, using the `data` command. 
+
+```{r}
+library(Lock5Data)
+data("HollywoodMovies")
+```
+
+
+### R Help File
+
+If your data are part of an R package, you can view the help file, containing information on the dataset using the command `?` before the name of the dataset. This should open the description file in the lower right panel of the RStudio window. Even if your data are not part of an R package, it is a good idea to look for this kind of information if it is available. 
+
+
+```{r}
+?HollywoodMovies
+```
+
+
+## Preview the Data
+
+The `glimpse()` function gives an overview of the information contained in a dataset. We can see the number of observations (rows), and the number of variables, (columns). We also see the name of each variable and its type. Variable types include 
+
+* Categorical variables, which take on groups or categories, rather than numeric values. In R, these might be coded as logical `<logi>`, character `<chr>`, factor `<fct>` and ordered factor `<ord>`.  
+  
+* Quantitative variables, which take on meaningful numeric values. These include numeric `<num>`, integer `<int>`, and double `<dbl>`.   
+
+### `glimpse()`
+
+```{r}
+glimpse(HollywoodMovies)
+```
+
+A function similar to `glimpse()` is `skim()`, which is part of the `skimr()` package. `skim()` shows us: 
+
+For factor variables, `skimr()` reports    
+    * number of missing cases (emp)   
+    * proportion of complete cases, i.e. not missing (complete_rate)    
+        * whether or not the categories have an ordering (ordered)   
+    * number of unique categories    (n_unique)   
+        * most frequently occurring (top_counts)   
+    
+For numeric variables, `skimr()` reports   
+    * number of missing values (n_missing)    
+    * proportion of complete cases, i.e. not missing (complete_rate)   
+    * mean    
+    * standard deviation (sd)   
+    * minimum (p0), 25th percentile (p25), median (p50), 75th percentile (p75), and maximum (p100)   
+    * a histogram of the values (these can be hard to read)  
+
+
+
+
+#### `summary()`
+
+The `summary` function provides additional information. It can be used for the entire dataset, or individual variables. 
+
+```{r}
+summary(HollywoodMovies)
+```
+
+
+
+```{r}
+summary(HollywoodMovies$WorldGross)
+```
+
+The `head()` and `tail()` command allow us the view the first, or last, rows of a dataset. 
+
+```{r}
+head(HollywoodMovies)
+```
+
+##  Modifying the Data
+
+The `Year` variable could reasonably be thought of as either categorical or quantitative. We'll convert it to categorical, and then back.    
+
+### Converting from quantitative to categorical
+
+```{r}
+HollywoodMovies$Year <- as.factor(HollywoodMovies$Year)
+```
+
+### Converting from categorical to  quantitative
+
+When converting from categorical to quantitative, we must perform the intermediate step of converting to character. Going directly from factor to numeric can lead to unexpected and nonsensical results. 
+
+```{r}
+HollywoodMovies$Year <- as.numeric(as.character(HollywoodMovies$Year))
+```
+
+We can also create new variables, using the `mutate()` function. 
+
+### Adding a new variable with `mutate()` 
+
+In the data description, the variable `Profitability` is defined as *WorldGross as a percentage of Budget*. Thus, films for which `Profitability` exceeds 100 were profitable. 
+
+We create a variable to tell whether or not a film was profitable. Note that in R, a variable defined as a condition, such as `Profitability>100` will return values of either `TRUE` or `FALSE`.   
+
+```{r}
+HollywoodMovies <- HollywoodMovies %>% mutate(Profitable = Profitability > 100)
+```
+
+```{r}
+summary(HollywoodMovies$Profitable)
+```
+
+
+### Selecting Columns
+
+If the dataset contains a large number of variables, narrow down to the ones you are interested in working with. This can be done with the `select()` command.  If there are not very many variables to begin with, or you are interested in all of them, then you may skip this step.
+
+Let's narrow the dataset down to the variables `Movie`, `RottenTomatoes`, `AudienceScore`, `Genre`, `WorldGross`, `Budget`, "Profitable", and `Year`.  
+
+
+```{r}
+MoviesSubset <- HollywoodMovies %>% select(Movie, RottenTomatoes, AudienceScore, 
+                                           Genre, WorldGross, Budget, Profitable, 
+                                           Year)
+```
+
+
+### Filtering by Row
+
+The `filter()` command narrows a dataset down to rows that meet a specified condition.
+
+#### Filtering by a Categorical Variable
+
+Let's filter the data to only include action movies, comedies, dramas, and horror movies. 
+
+```{r}
+MoviesSubset1 <- MoviesSubset %>% 
+  filter(Genre %in% c("Action", "Comedy", "Drama", "Horror"))
+```
+
+```{r}
+glimpse(MoviesSubset1)
+```
+
+#### Filtering by a Quantitative Variable
+
+Let's filter the data to only include films whose world gross exceeds 100 million dollars. 
+
+```{r}
+MoviesSubset2 <- MoviesSubset %>% filter(WorldGross >100)
+```
+
+Now, let's preview the data again. 
+
+```{r}
+glimpse(MoviesSubset2)
+```
+
+We'll use MoviesSubset1 from this point forward. 
+
+## Visualize the Data
+
+Next, we'll create graphics to help us visualize the distributions and relationships between variables. We'll use the `ggplot()` function, which is part of the `tidyverse` package. 
+
+### Histogram 
+
+Histograms are useful for displaying the distribution of a single quantitative variable    
+
+#### General Template for Histogram
+
+```{r, eval=FALSE}
+ggplot(data=DatasetName, aes(x=VariableName)) + 
+  geom_histogram(fill="colorchoice", color="colorchoice") + 
+  ggtitle("Plot Title") +
+  xlab("x-axis label") + 
+  ylab("y-axis label")
+```
+
+#### Histogram of Audience Scores
+
+```{r}
+ggplot(data=MoviesSubset1, aes(x=AudienceScore)) + 
+  geom_histogram(fill="lightblue", color="white") + 
+  ggtitle("Distribution of Audience Scores") +
+  xlab("Audience Score") + 
+  ylab("Frequency")
+```
+
+### Density Plots
+
+Density plots show the distribution for a quantitative variable like audience score. Scores can be compared across categories, like genre.   
+
+#### General Template for Density Plot
+
+```{r, eval=FALSE}
+ggplot(data=DatasetName, aes(x=QuantitativeVariable,
+                             color=CategoricalVariable, fill=CategoricalVariable)) + 
+  geom_density(alpha=0.2) + 
+  ggtitle("Plot Title") +
+  xlab("Axis Label") + 
+  ylab("Frequency") 
+```
+
+`alpha`, ranging from 0 to 1 dictates transparency. 
+
+#### Density Plot of Audience Scores
+
+```{r}
+ggplot(data=MoviesSubset1, aes(x=AudienceScore, color=Genre, fill=Genre)) + 
+  geom_density(alpha=0.2) + 
+  ggtitle("Distribution of Audience Scores") +
+  xlab("Audience Score") + 
+  ylab("Frequency") 
+```
+
+###  Boxplot
+
+Boxplots can be used to compare a quantitative variable with a categorical variable
+
+#### General Template for Boxplot
+
+```{r, eval=FALSE}
+ggplot(data=DatasetName, aes(x=CategoricalVariable, 
+                             y=QuantitativeVariable)) + 
+  geom_boxplot() + 
+  ggtitle("Plot Title") + 
+  xlab("Variable Name") + ylab("Variable Name") 
+```
+
+You can make the plot horizontal by adding `+ coordflip()`. You can turn the axis text vertical by adding `theme(axis.text.x = element_text(angle = 90))`. 
+
+#### Boxplot Comparing Scores for Genres
+
+```{r}
+ggplot(data=MoviesSubset1, aes(x=Genre, y=AudienceScore)) + geom_boxplot() + 
+  ggtitle("Audience Score by Genre") + 
+  xlab("Genre") + ylab("Audience Score") + 
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+### Violin Plot
+
+Violin plots are an alternative to boxplots. The width of the violin tells us the density of observations in a given range. 
+
+#### General Template for Violin Plot
+
+```{r, eval=FALSE}
+ggplot(data=DatasetName, aes(x=CategoricalVariable, y=QuantitativeVariable, 
+                             fill=CategoricalVariable)) + 
+  geom_violin() + 
+  ggtitle("Plot Title") + 
+  xlab("Variable Name") + ylab("Variable Name") 
+```
+
+#### Violin Plot Comparing Scores for Genres
+
+```{r}
+ggplot(data=MoviesSubset1, aes(x=Genre, y=AudienceScore, fill=Genre)) + 
+  geom_violin() + 
+  ggtitle("Audience Score by Genre") + 
+  xlab("Genre") + ylab("Audience Score") + 
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+We can view the boxplot and violin plot together. 
+
+### Scatterplots   
+
+Scatterplots are used to visualize the relationship between two quantitative variables.  
+
+#### Scatterplot Template
+
+```{r, eval=FALSE}
+ggplot(data=DatasetName, aes(x=CategoricalVariable, y=QuantitativeVariable)) + 
+  geom_point() +
+  ggtitle("Plot Title") + 
+  ylab("Axis Label") + 
+  xlab("Axis Label")
+```
+
+
+#### Scatterplot Comparing Audience Score and Rotten Tomatoes Score
+
+```{r}
+ggplot(data=MoviesSubset1, aes(x=RottenTomatoes, y=AudienceScore)) + 
+  geom_point() +
+  ggtitle("Audience and Critics Ratings") + 
+  ylab("Audience Rating") + 
+  xlab("Critics' Rating")
+```
+
+We see that there is an upward trend, indicating a positive association between critics scores (RottenTomatoes), and audience scores. However, there is a lot of variability, and the relationship is moderately strong at best.   
+
+We can also add color, size, and shape to the scatterplot to display information about other variables. 
+
+```{r}
+ggplot(data=MoviesSubset1, 
+       aes(x=RottenTomatoes, y=AudienceScore, color=Genre, size=WorldGross)) + 
+  geom_point() +
+  ggtitle("Audience and Critics Ratings") + 
+  ylab("Audience Rating") + 
+  xlab("Critics' Rating")
+```
+
+We can add labels for points meeting certain conditions, using `geom_text()`. This should be done carefully, to avoid overlap. 
+
+```{r}
+ggplot(data=MoviesSubset1, 
+       aes(x=RottenTomatoes, y=AudienceScore, color=Genre, size=WorldGross)) + 
+  geom_point() +
+  ggtitle("Audience and Critics Ratings") + 
+  ylab("Audience Rating") + xlab("Critics' Rating") + 
+  geom_text(data = MoviesSubset1 %>% filter(WorldGross >800), aes(label = Movie), 
+            color="black", check_overlap = TRUE)
+```
+
+### Bar Graphs  
+
+Bar graphs can be used to visualize one or more categorical variables 
+
+
+#### Bar Graph Template
+
+```{r, eval=FALSE}
+ggplot(data=DatasetName, aes(x=CategoricalVariable)) + 
+  geom_bar(fill="colorchoice",color="colorchoice")  + 
+  ggtitle("Plot Title") + 
+  xlab("Variable Name") + 
+  ylab("Frequency") 
+```
+
+#### Bar Graph by Genre
+
+```{r}
+ggplot(data=MoviesSubset1, aes(x=Genre)) + 
+  geom_bar(fill="lightblue",color="white")  + 
+  ggtitle("Number of Films by Genre") + 
+  xlab("Genre") + 
+  ylab("Number of Films") +   
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+### Stacked and Side-by-Side Bar Graphs
+
+#### Stacked Bar Graph Template
+
+```{r, eval=FALSE}
+ggplot(data = DatasetName, mapping = aes(x = CategoricalVariable1, 
+                                         fill = CategoricalVariable2)) +
+    stat_count(position="fill")  +
+  theme_bw() + ggtitle("Plot Title") + 
+  xlab("Variable 1") + 
+  ylab("Proportion of Variable 2") +   
+  theme(axis.text.x = element_text(angle = 90)) 
+```
+
+
+#### Stacked Bar Graph Example
+
+The `stat_count(position="fill")` command creates a stacked bar graph, comparing two categorical variables.  Let's explore whether certain genres are more profitable than others, using the profitability variable. 
+
+```{r}
+ggplot(data = MoviesSubset1, mapping = aes(x = Genre, fill = Profitable)) +
+    stat_count(position="fill")  +
+  theme_bw() + ggtitle("Profitability by Genre") + 
+  xlab("Genre") + 
+  ylab("Proportion Profitable") +   
+  theme(axis.text.x = element_text(angle = 90)) 
+```
+
+
+#### Side-by-side Bar Graph Template
+
+We can create a side-by-side bar graph, using `position=dodge`. 
+
+```{r, eval=FALSE}
+ggplot(data = DatasetName, mapping = aes(x = CategoricalVariable1, 
+                                         fill = CategoricalVariable2)) +
+    geom_bar(position = "dodge") +
+  ggtitle("Plot Title") + 
+  xlab("Genre") + 
+  ylab("Frequency") 
+```
+
+
+#### Side-by-side Bar Graph Example
+
+```{r}
+ggplot(data = MoviesSubset1, mapping = aes(x = Genre, fill = Profitable)) +
+    geom_bar(position = "dodge") +
+  ggtitle("Number of Films by Genre") + 
+  xlab("Genre") + 
+  ylab("Number of Films") +   
+  theme(axis.text.x = element_text(angle = 90)) 
+```
+
+
+### Examining Correlation
+
+Correlation plots can be used to visualize relationships between quantitative variables. These can be helpful when we proceed to modeling. Explanatory variables that are highly correlated with the response are often strong predictors that should be included in a model. However, including two explanatory variables that are highly correlated with one another can create interpretation problems. 
+
+The `cor()` function calculates correlations between quantitative variables. We'll use `select_if` to select only numeric variables. The `use="complete.obs" command tells R to ignore observations with missing data. 
+
+#### Correlation Plot
+
+```{r}
+cor(select_if(MoviesSubset1, is.numeric), use="complete.obs")
+```
+
+
+The `corrplot()` function in the `corrplot()` package provides a visualization of the correlations. Larger, thicker circles indicate stronger correlations. 
+
+```{r}
+library(corrplot)
+Corr <- cor(select_if(HollywoodMovies, is.numeric), use="complete.obs")
+corrplot(Corr)
+```
+
+
+
+A scatterplot matrix is a grid of plots. It can be created using the `ggpairs()` function in the `GGally` package. 
+
+The scatterplot matrix shows us:  
+
+1. Along the diagonal are density plots for quantitative variables, or bar graphs for categorical variables, showing the distribution of each variable.   
+2. Under the diagonal are plots showing the relationships between the variables in the corresponding row and column. Scatterplots are used when both variables are quantitative, bar graphs are used when both variables are categorical, and boxplots are used when one variable is categorical, and the other is quantitative.    
+3. Above the diagonal are correlations between quantitative variables. 
+
+We need to remove the column with the movie names. This is done using `select`. 
+
+#### Scatterplot Matrix
+
+```{r}
+library(GGally)
+ggpairs(MoviesSubset1 %>% select(-Movie))
+```
+
+The scatterplot matrix is useful for helping us notice key trends in our data. However, the plot can hard to read as it is quite dense, especially when there are a large number of variables. These can help us look for trends from a distance, but we should then focus in on more specific plots. 
+
+
+## Summary Tables
+
+The `group_by()` and `summarize()` commands are useful for breaking categorical variables down by category. For example, let's calculate number of films in each genre, and the mean,  median, and standard deviation in film `WorldGross` by genre. 
+
+Notes:  
+1. The `n()` command calculates the number of observations in a category.    
+2. The `na.rm=TRUE` command removes missing values, so that summary statistics can be calculated.  
+3. `arrange(desc(Mean_Gross))` arranges the table in descending order of Mean_Gross. To arrange in ascending order, use `arrange(Mean_Gross)`. 
+
+```{r}
+MoviesSubset1 %>% group_by(Genre) %>%
+  summarize(N = n(), 
+            Mean_Gross = mean(WorldGross, na.rm=TRUE), 
+            Median_Gross = median(WorldGross, na.rm=TRUE), 
+            StDev_Gross = sd(WorldGross, na.rm = TRUE)) %>%
+  arrange(desc(Mean_Gross))
+```
+
+The `kable()` function in the `knitr()` package creates tables with professional appearance. 
+
+```{r}
+library(knitr)
+MoviesTable <- MoviesSubset1 %>% group_by(Genre) %>%
+  summarize(N = n(), 
+            Mean_Gross = mean(WorldGross, na.rm=TRUE), 
+            Median_Gross = median(WorldGross, na.rm=TRUE), 
+            StDev_Gross = sd(WorldGross, na.rm = TRUE)) %>%
+  arrange(desc(Mean_Gross))
+kable(MoviesTable)
+```
+
+
+# Introduction to Linear Models
+
+## Preprocessing Data
+
+This chapter provides examples of how to fit models in R. We'll use the bears and cars2015 datasets discussed in the note slides. First, we'll load these data. 
+
+```{r}
+library(Bolstad)
+data(bears)
+```
+
+```{r}
+library(Lock5Data)
+data(Cars2015)
+```
+
+Now, we'll preprocess the bears data, as was done in the notes. In particular, we'll:   
+
+1. filter to the first observation on each bear    
+2. Convert month and sex to factor variables    
+3. Create a season variable by grouping together months.
+
+```{r}
+# filter
+Bears_Subset <- bears %>% filter(Obs.No == 1)
+#convert to factors
+Bears_Subset$Month <- as.factor(Bears_Subset$Month)
+Bears_Subset$Sex <- as.factor(Bears_Subset$Sex)
+# create season variable
+Bears_Subset <- Bears_Subset %>% mutate(Season = ifelse(Month %in% 4:5, "Spring",
+ifelse(Month %in% 6:8, "Summer", "Fall")))
+Bears_Subset$Season <- as.factor(Bears_Subset$Season)
+```
+
+## Fitting Models
+
+### Modeling with one Explanatory Variable
+
+Template:
+
+```{r, eval=FALSE}
+M <- lm(data=Dataset_Name, Response ~ Explanatory)
+```
+
+We see a summary of the model using `summary()`. 
+
+```{r, eval=FALSE}
+summary(M)
+```
+
+#### Example: Model Weight Using Age
+
+We model a bear's weight, using age as the explanatory variable. 
+
+```{r}
+Bears_M_Age <- lm(data=Bears_Subset, Weight ~ Age)
+```
+
+```{r}
+summary(Bears_M_Age)
+```
+
+
+### Modeling with two Explanatory Variables
+
+Template:
+
+```{r, eval=FALSE}
+M <- lm(data=Dataset_Name, Response ~ Explanatory1 + Explanatory2)
+summary(M)
+```
+
+
+#### Example: Model Weight Using Age and Sex
+
+We model a bear's weight, using age and sex as explanatory variables. 
+
+```{r}
+Bears_M_Age_Sex <- lm(data=Bears_Subset, Weight ~ Age + Sex)
+```
+
+```{r}
+summary(Bears_M_Age_Sex)
+```
+
+
+
+### Models with 3 or more Variables
+
+For a model with 3 or more variables, and no interactions, simply place `+` between each explanatory variable. 
+
+#### Model Weight Using Age, Sex, and Season
+
+We'll fit a model between age, sex, and season, without any interactions. 
+
+```{r}
+Bears_M_Age_Sex_Season <- lm(data=Bears_Subset, Weight ~ Age + Sex + Season)
+```
+
+```{r}
+summary(Bears_M_Age_Sex_Season)
+```
+
+
+## Models with Interaction
+
+To model with an interaction, use `*` instead of `+`
+
+Template:
+
+```{r, eval=FALSE}
+M_Int <- lm(data=Dataset_Name, Response ~ Explanatory1 * Explanatory2)
+summary(M_Int)
+```
+
+
+### Example Model with Interaction
+
+We model a bear's weight, using age and sex as explanatory variables, with an interaction. 
+
+```{r}
+Bears_M_Age_Sex_Int <- lm(data=Bears_Subset, Weight ~ Age * Sex)
+```
+
+```{r}
+summary(Bears_M_Age_Sex_Int)
+```
+
+
+For a model with 3 or more variables, and all possible interactions (including interactions between 3 or more variables), use `*` in place of `+`, between each variable. 
+
+### Example Interaction Using `*`
+
+We'll fit a model between age, sex, and season, with all possible interactions interactions. 
+
+```{r}
+Bears_M_Age_Sex_Season_All_Int <- lm(data=Bears_Subset, Weight ~ Age * Sex * Season)
+```
+
+```{r}
+summary(Bears_M_Age_Sex_Season_All_Int)
+```
+
+
+### Example: Interaction Using `+`
+
+We can also add in interaction effects one-by-one using `Var1:Var2`. 
+
+
+We'll fit a model between age, sex, and season, with only the age-season interaction.
+
+```{r}
+Bears_M_Age_Sex_Season_All_Int <- lm(data=Bears_Subset, 
+                                     Weight ~ Age + Sex + Season + Age:Season)
+```
+
+```{r}
+summary(Bears_M_Age_Sex_Season_All_Int)
+```
+
+
+
+## ANOVA F-Statistics
+
+### `anova()` Command
+
+The `anova` command calculates an F-statistic for a full model vs a reduced model. 
+
+#### `anova()` Template:
+
+```{r, eval=FALSE}
+anova(Reduced_Model, Full_Model)
+```      
+
+#### `anova()` Example
+
+We'll compare the full model involving age and sex, to a reduced model involving only age. 
+
+```{r}
+anova(Bears_M_Age, Bears_M_Age_Sex)
+```
+
+### `aov()` Command
+
+The `aov` command is useful for obtaining an F-statistic for models with a categorical explantory variable. This F-statistic is equivalent to the one we would get using a reduced model of containing only the intercept, and measures the amount of variability between different groups, relative to the amount of variability within groups.
+
+#### `aov()` Template
+
+```{r, eval=FALSE}
+A <- aov(data=Dataset_Name, Response~Categorical_Explanatory_Var)
+summary(A)
+```
+
+####  `aov()` Commad
+
+```{r}
+Bears_A_Season <- aov(data=Bears_Subset, Weight~Season)
+summary(Bears_A_Season)
+```
+
+## Making Predictions
+
+We can make predictions using the `predict()` function. This requires specifying the model, as well as the new data being predicted. The new data should be specified in the form of a dataframe, which can be defined inside the `predict()` command, or before hand. 
+
+
+###  `predict()` Command
+
+We'll predict the weight of a 24 month old female bear, using the model using age, sex, and interaction. Recall that male bears are coded as `Sex=1`, and female bears as `Sex=2`. 
+
+```{r}
+predict(Bears_M_Age_Sex_Int, newdata=data.frame(Age=24, Sex="2"))
+```
+
+We'll predict the weight of a 24 month old male bear, using the model using age, sex, and interaction.  
+
+```{r}
+predict(Bears_M_Age_Sex_Int, newdata=data.frame(Age=24, Sex="1"))
+```
+
+### Defining New Data Before `predict()`
+
+We can also define the new data outside the `predict()` function. It's easiest to do this one variable at a time, then combine them into a dataframe. 
+
+We'll predict the weights of bears of different ages and sexes. 
+
+```{r}
+Age <- c(15, 25, 28, 37, 44, 62)
+Sex <- c("1", "2","1", "1", "2", "1" )
+NewBears <- data.frame(Age, Sex)
+```
+
+Let's see the new dataset. 
+```{r}
+NewBears
+```
+
+Now we'll make predictions on the weights of the bears in the new dataset. 
+
+```{r}
+predict(Bears_M_Age_Sex_Int, newdata=NewBears)
+```
+
+
+# Interval Estimation via Simulation
+
+## Performing the Bootstrap
+
+Bootstrapping is a computationally-intense, simulation approach, designed to quantify variability associated with a statistic when generalizing from a sample to a large population. 
+
+To write code for a bootstrap, follow these steps   
+
+1) Create vectors in which to store the bootstrap results. Create a vector for each statistic of interest.    
+2) Write a for-loop in which you will perform a procedure many times (10000 simulations is usually appropriate in this class) within the loop perform steps 3 and 4.    
+3) Take a sample the same size as the original data, using replacement.    
+4) Calculate whatever statistics you are interested in for the bootstrap sample. This might involve calculating means, medians, standard deviations, or other statistics, or fitting a model to obtain regression coefficients.   
+5) Combine results for each of the qualities you bootstrapped into a dataframe. 
+
+### Setting a Seed
+
+Because bootstrapping involves taking a random sample, results will come out slightly differentely each time you run your code. Doing a large number of simulations ensures that the average results from each simulation will be similar, but they will not be identical. 
+
+Thus, each time you knit your document, you'll get slightly different results, which can be a problem when summarizing your results. To avoid this, you can set a random seed, which tells R to start its random procedure in the same place each time. This is done using the `set.seed()` function. I typically use the date as my seed, but you can use any number you want. 
+
+```{r}
+set.seed(09262020)
+```
+
+
+### Template for Bootstrap
+
+```{r, eval=FALSE}
+
+statistic1 <- rep(NA, 10000) # create vector to store bootstrap results for first statistic
+statistic2 <- rep(NA, 10000) # create vector to store bootstrap results for second statistic
+statistic3 <- rep(NA, 10000) # create vector to store bootstrap results for third statistic
+# continue if there are more than 3 quantities of interest
+
+# for loop
+for (i in 1:10000){
+BootstrapSample <- sample_n(DatasetName, samplesize, replace="TRUE")  
+statistic1[i] <- #calculate first statistic on bootstrap sample
+statistic2[i] <- #calculate second statistic on bootstrap sample
+statistic3[i] <- #calculate third statistic on bootstrap sample
+}
+
+Bootstrap_Results <- data.frame(statistic1, statistic2, statistic3)
+```
+
+### Bootstrap for Difference in Proportion Supporting Candidates
+
+Bootstrap difference in proportion supporting each 2020 candidate, using results from Washington Post Poll in September 2020. 
+
+```{r}
+Vote <- c(rep("Biden", 351), rep("Trump", 323), rep("Other", 28))
+Sample <- data.frame(Vote)
+
+Difference <- rep(NA, 10000)
+for (i in 1:10000){
+BootstrapSample <- sample_n(Sample, 702, replace=TRUE) 
+Difference[i] <- (sum(BootstrapSample$Vote=="Biden") - 
+                    sum(BootstrapSample$Vote=="Trump"))/702
+}
+Vote_BootstrapResults <- data.frame(Difference)
+```
+
+
+### Bootstrap for Mean, Median, St.Dev., Prop>1
+
+Bootstrap mean, median, standard deviation, mercury levels in Florida lakes, and percentage of lakes with mercury level exceeding 1 ppm. 
+
+```{r}
+MeanHg <- rep(NA, 10000)
+StDevHg <- rep(NA, 10000)
+PropOver1 <- rep(NA, 10000)
+MedianHg <- rep(NA, 10000)
+
+for (i in 1:10000){
+BootstrapSample <- sample_n(FloridaLakes, 53, replace=TRUE) 
+MeanHg[i] <- mean(BootstrapSample$AvgMercury)
+StDevHg[i] <- sd(BootstrapSample$AvgMercury)
+PropOver1[i] <- mean(BootstrapSample$AvgMercury>1)
+MedianHg[i] <- median(BootstrapSample$AvgMercury)
+}
+Lakes_Bootstrap_Results <- data.frame(MeanHg, MedianHg, PropOver1, StDevHg)
+```
+
+### Bootstrap for Difference Between Groups
+
+Consider the difference between average mercury levels in northern and southern Florida lakes. First, we'll add the location variable to the dataset. 
+
+```{r}
+library(Lock5Data)
+data(FloridaLakes)
+#Location relative to rt. 50
+FloridaLakes$Location <- as.factor(c("S","S","N","S","S","N","N","N","N","N","N",
+                                     "S","N","S","N","N","N","N","S","S","N","S",
+                                     "N","S","N","S","N","S","N","N","N","N","N",
+                                     "N","S","N","N","S","S","N","N","N","N","S",
+                                     "N","S","S","S","S","N","N","N","N"))
+head(FloridaLakes %>% select(Lake, AvgMercury, Location))
+```
+
+When performing the bootstrap, we sample the same number of observations from each category as were present in the original data. In this example, there were 33 lakes in Northern Florida, and 20 in Southern Florida. We'll fit a model with the categorical explanatory variable, location, and recall that $b_1$ represents the average difference between northern and southern lakes. We'll bootstrap for the distribution of $b_1$. 
+
+```{r}
+b1 <- rep(NA, 10000)  #vector to store b1 values
+for (i in 1:10000){
+  # sample 33 northern lakes
+NLakes <- sample_n(FloridaLakes %>% filter(Location=="N"), 33, replace=TRUE)   
+ # sample 20 southern lakes
+SLakes <- sample_n(FloridaLakes %>% filter(Location=="S"),  20, replace=TRUE)  
+BootstrapSample <- rbind(NLakes, SLakes)   # combine Northern and Southern Lakes
+M <- lm(data=BootstrapSample, AvgMercury ~ Location) # fit linear model
+# record b1 (note indexing in coefficents starts at 1, so b0=coef(M)[1], and b1=coef(M)[2], etc.)
+b1[i] <- coef(M)[2] 
+}
+NS_Lakes_Bootstrap_Results <- data.frame(b1)  #save results as dataframe
+```
+
+### Bootstrap for Regression Coefficients
+
+We'll bootstrap for coefficients in the bears interaction model. 
+
+```{r}
+b0 <- rep(NA, 10000)
+b1 <- rep(NA, 10000)
+b2 <- rep(NA, 10000)
+b3 <- rep(NA, 10000)
+for (i in 1:10000){
+BootstrapSample <- sample_n(Bears_Subset, 97, replace=TRUE) #take bootstrap sample
+M <- lm(data=BootstrapSample, Weight ~ Age*Sex) # fit linear model
+#(note indexing in coefficents starts at 1, so b0=coef(M)[1], and b1=coef(M)[2], etc.)
+b0[i] <- coef(M)[1] # record b0 
+b1[i] <- coef(M)[2] # record b1
+b2[i] <- coef(M)[3] # record b2
+b3[i] <- coef(M)[4] # record b3
+}
+Bears_Bootstrap_Results <- data.frame(b0, b1, b2, b3)
+```
+
+
+## Bootstrap Confidence Intervals
+
+### Visualizing the Bootstrap Distribution
+
+Template for creating a histogram of the bootstrap distribution:
+
+```{r, eval=FALSE}
+Boot_Dist_Plot <- ggplot(data=Bootstrap_Results, aes(x=statistic)) +  
+  geom_histogram(color="colorchoice", fill="colorchoice") +   
+  xlab("Statistic") + ylab("Frequency") +
+  ggtitle("Bootstrap Distribution for ...") 
+Boot_Dist_Plot
+```
+
+### Percentile Confidence Intervals
+
+The quantile commands can be used to find the middle 95% of the bootstrap distribution. (or whatever percentage is desired). 
+
+```{r, eval=FALSE}
+q.025 <- quantile(Bootstrap_Results$statistic, 0.025)
+q.975 <- quantile(Bootstrap_Results$statistic, 0.975)
+c(q.025, q.975)
+```
+
+We can add the cutoff points of the percentile confidence interval to the plot, as shown. 
+
+```{r, eval=FALSE}
+Boot_Dist_Plot + geom_vline(xintercept=c(Estimate - 2*SE, Estimate + 2*SE), color="red")
+```
+
+
+### Standard Error Confidence Intervals
+
+When the bootstrap distribution is symmetric and bell-shaped, the 2-standard error method also provides a reasonable confidence interval. 
+
+Calculate standard error:
+
+```{r, eval=FALSE}
+SE <- sd(Bootstrap_Results$statistic)
+```
+
+Calculate estimate from original sample
+
+```{r, eval=FALSE}
+Estimate <- #calculate statistic of interest from original dataset
+```
+
+Add and subtract 2 standard errors
+
+```{r, eval=FALSE}
+c(Estimate - 2*SE, Estimate + 2*SE)
+```
+
+We add the cutoff points for the standard error confidence interval
+
+```{r, eval=FALSE}
+Boot_Dist_Plot + geom_vline(xintercept = c(Estimate - 2*SE, Estimate + 2*SE), color="red")
+```
+
+### Election Poll
+
+```{r}
+Boot_Dist_Plot<- ggplot(data=Vote_BootstrapResults, aes(x=Difference)) + 
+  geom_histogram(fill="blue", color="white") + 
+  ggtitle("Bootstrap Distribution for Difference in Proportion") + 
+  xlab("Proportion Democratic - Proportion Republican") + ylab("Frequency") 
+Boot_Dist_Plot
+```
+
+
+We calculate the 0.025 and 0.975 quantiles of the bootstrap distribution. 
+
+```{r}
+q.025 <- quantile(Vote_BootstrapResults$Difference, 0.025)
+q.975 <- quantile(Vote_BootstrapResults$Difference, 0.975)
+c(q.025, q.975)
+```
+
+Plot of bootstrap distribution with percentile confidence interval endpoints. 
+
+```{r}
+Boot_Dist_Plot + geom_vline(xintercept=c(q.025, q.975), color="red")
+```
+
+We'll calculate the standard deviation of the bootstrap distribution, also known as the bootstrap standard error. 
+
+```{r}
+SE <- sd(Vote_BootstrapResults$Difference)
+SE
+```
+
+A 95% standard error confidence interval is given by:
+
+```{r}
+Estimate <- 0.50-0.46 #difference in proportions from original sample
+```
+
+
+```{r}
+c(Estimate - 2*SE, Estimate + 2*SE)
+```
+
+```{r}
+Boot_Dist_Plot + geom_vline(xintercept=c(Estimate - 2*SE, Estimate + 2*SE), color="red")
+```
+
+###  Bootstrap Distribution for Mean Mercury Level in Florida Lakes 
+
+Graph the bootstrap distribution:
+
+```{r}
+Boot_Dist_Plot <- ggplot(data=Lakes_Bootstrap_Results, aes(x=MeanHg)) +  
+  geom_histogram(color="white", fill="blue") +   
+  xlab("Mean Mercury Level in Bootstrap Samples") + ylab("Frequency") +
+  ggtitle("Bootstrap Distribution for Mean Mercury Level") 
+Boot_Dist_Plot
+```
+
+Calculate 0.025 and 0.975 quantiles:
+
+```{r}
+q.025 <- quantile(Lakes_Bootstrap_Results$MeanHg, 0.025)
+q.975 <- quantile(Lakes_Bootstrap_Results$MeanHg, 0.975)
+c(q.025, q.975)
+```
+
+Add cutoff points of interval to the plot:
+
+```{r}
+Boot_Dist_Plot + geom_vline(xintercept=c(q.025, q.975), color="red")
+```
+
+
+Calculate standard error:
+
+```{r}
+SE <- sd(Lakes_Bootstrap_Results$MeanHg)
+SE
+```
+
+Calculate estimate from original sample
+
+```{r}
+Estimate <- mean(FloridaLakes$AvgMercury)
+```
+
+Add and subtract 2 standard errors
+
+```{r}
+c(Estimate - 2*SE, Estimate + 2*SE)
+```
+
+Plot with endpoints of SE Confidence interval
+```{r}
+Boot_Dist_Plot + geom_vline(xintercept = c(Estimate - 2*SE, Estimate + 2*SE), 
+                            color="red")
+```
+
+### Bootstrap Distribution for Difference in Mean Mercury Level in Florida Lakes between N and S
+
+Graph the bootstrap distribution:
+
+```{r}
+Boot_Dist_Plot <- ggplot(data=NS_Lakes_Bootstrap_Results, aes(x=b1)) +  
+  geom_histogram(color="white", fill="blue") +   
+  xlab("Mean Difference in Mercury Level in Bootstrap Samples") + ylab("Frequency") +
+  ggtitle("Bootstrap Distribution for Difference in  Mean Mercury Level for N vs S") 
+Boot_Dist_Plot
+```
+
+Calculate 0.025 and 0.975 quantiles:
+
+```{r}
+q.025 <- quantile(NS_Lakes_Bootstrap_Results$b1, 0.025)
+q.975 <- quantile(NS_Lakes_Bootstrap_Results$b1, 0.975)
+c(q.025, q.975)
+```
+
+Add cutoff points of interval to the plot:
+
+```{r}
+Boot_Dist_Plot + geom_vline(xintercept=c(q.025, q.975), color="red")
+```
+
+
+Calculate standard error:
+
+```{r}
+SE <- sd(NS_Lakes_Bootstrap_Results$b1)
+SE
+```
+
+Calculate estimate from original sample:
+
+```{r}
+M <- lm(data=FloridaLakes, AvgMercury~Location)
+Estimate <- M$coef[2]  #record b1 from actual sample
+```
+
+Add and subtract 2 standard errors:
+
+```{r}
+c(Estimate - 2*SE, Estimate + 2*SE)
+```
+
+
+```{r}
+Boot_Dist_Plot + geom_vline(xintercept=c(Estimate - 2*SE, Estimate + 2*SE), color="red")
+```
+
+### Bootstrap Distribution for Coefficients in Bears Multiple Regression Model
+
+We'll look at the bootstrap distribution for $(b_0 + b_2) + 24(b_1+b_3)$ which represents the expected weight of a 24 month old female bear.
+
+```{r}
+Boot_Dist_Plot <- ggplot(data=Bears_Bootstrap_Results, 
+                         aes(x=b0+b2+24*(b1+b3))) +  
+  geom_histogram(color="white", fill="blue") +   
+  xlab("Mean Expected Weight in Bootstrap Samples") + 
+  ylab("Frequency") +
+  ggtitle("Bootstrap Distribution for Expected Weight of 24 Month old Female Bear") 
+Boot_Dist_Plot
+```
+
+Calculate 0.025 and 0.975 quantiles:
+
+```{r}
+q.025 <- quantile(Bears_Bootstrap_Results$b0 + Bears_Bootstrap_Results$b2 + 
+                    24*(Bears_Bootstrap_Results$b1 + Bears_Bootstrap_Results$b3), 0.025)
+q.975 <- quantile(Bears_Bootstrap_Results$b0 + Bears_Bootstrap_Results$b2 + 
+                    24*(Bears_Bootstrap_Results$b1 + Bears_Bootstrap_Results$b3), 0.975)
+c(q.025, q.975)
+```
+
+Add cutoff points of interval to the plot:
+
+```{r}
+Boot_Dist_Plot + geom_vline(xintercept=c(q.025, q.975), color="red")
+```
+
+
+Calculate standard error:
+
+```{r}
+SE <- sd(Bears_Bootstrap_Results$b0 + Bears_Bootstrap_Results$b2 + 
+                    24*(Bears_Bootstrap_Results$b1 + Bears_Bootstrap_Results$b3))
+SE
+```
+
+Calculate estimate from original sample:
+
+```{r}
+M <- lm(data=Bears_Subset, Weight~Age*Sex)
+Estimate <- M$coef[1] + M$coef[3] + 24*(M$coef[2]+M$coef[4])  
+```
+
+Add and subtract 2 standard errors:
+
+```{r}
+c(Estimate - 2*SE, Estimate + 2*SE)
+```
+
+
+```{r}
+Boot_Dist_Plot + geom_vline(xintercept=c(Estimate - 2*SE, Estimate + 2*SE), 
+                            color="red")
+```
+
+Note that the standard error method is not appropriate here, due to the right-skeweness in the bootstrap distribution.
+
+## Checking for Gaps and Clusters
+
+If there are gaps and/or clusters in the bootstrap distribution, it is inappropriate to create any kind of bootstrap confidence intervals. This is sometimes hard to tell from a histogram, as the choice of binwidth might lead to gaps that aren't really there in the bootstrap distribution. We can use jitter plots to look for gaps or clusters in the bootstrap distribution. 
+
+To do this, create a jitterplot, with the statistic from the bootstrap distribution on the y-axis. Simply say `x=1`, so there is an x-variable. The `geom_jitter()` command will spread the points out so they are not all on top of one another, and we can see them. 
+
+### Example: When the Bootstrap is Inappropriate
+
+```{r}
+ggplot(data=Lakes_Bootstrap_Results, aes(y=MedianHg, x=1)) + geom_jitter()
+```
+
+
+
+# Simulation-Based Hypothesis Tests
+
+In a simulation-based hypothesis test, we test the null hypothesis of no relationship between one or more explanatory variables and a response variable. 
+
+## Performing the Simulation-Based Test for Regression Coefficient
+
+To test for a relationship between a response variable and a single quantitative explanatory variable, or a categorical variable with only two categories, we perform the following steps.    
+
+1. Fit the model to the actual data and record the value of the regression coefficient $b_1$, which describes the slope of the regression line (for a quantitative variable), or the difference between groups (for a categorical variable with 2 categories).   
+2. Repeat the following steps many (say 10,000) times, using a "for" loop:  
+
+    * Randomly shuffle the values (or categories) of the explanatory variable to create a scenario where there is no systematic relationship between the explanatory and response variable.    
+    
+    * Fit the model to the shuffled data, and record the value of $b_1$.   
+
+3. Observe how many of our simulations resulted in values of $b_1$ as extreme as the one from the actual data. If this proportion is small, we have evidence that our result did not occur just by chance. If this value is large, it is plausible that the result we saw occurred by chance alone, and thus there is not enough evidence to say there is a relationship between the explanatory and response variables.    
+
+These steps are performed in the code below, using the example of price and acceleration time of 2015 cars.  
+
+### Simulation-Based Hypothesis Test Example
+
+```{r}
+Cars_M_A060  <- lm(data=Cars2015, LowPrice~Acc060)
+b1 <- Cars_M_A060$coef[2] # record value of b1 from actual data
+
+# perform simulation
+b1Sim <- rep(NA, 10000)          # vector to hold results
+ShuffledCars <- Cars2015    # create copy of dataset
+for (i in 1:10000){
+  #randomly shuffle acceleration times
+ShuffledCars$Acc060 <- ShuffledCars$Acc060[sample(1:nrow(ShuffledCars))] 
+ShuffledCars_M<- lm(data=ShuffledCars, LowPrice ~ Acc060)   #fit model to shuffled data
+b1Sim[i] <- ShuffledCars_M$coef[2]  # record b1 from shuffled model
+}
+Cars_A060SimulationResults <- data.frame(b1Sim)  #save results in dataframe
+```
+
+Now that we've performed the simulation, we'll display a histogram of the sampling distribution for $b_1$ when the null hypothesis of no relationship between price and acceleration time is true.  
+
+```{r}
+b1 <- Cars_M_A060$coef[2] # record value of b1 from actual data
+Cars_A060SimulationResultsPlot <- ggplot(data=Cars_A060SimulationResults, aes(x=b1Sim)) + 
+  geom_histogram(fill="lightblue", color="white") + 
+  geom_vline(xintercept=c(b1, -1*b1), color="red") + 
+  xlab("Simulated Value of b1") + ylab("Frequency") + 
+  ggtitle("Distribution of b1 under assumption of no relationship")
+Cars_A060SimulationResultsPlot
+```
+
+We can calculate the p-value by finding the proportion of simulations with $b_1$ values more extreme than the observed value of $b_1$, in absolute value. 
+
+```{r}
+mean(abs(b1Sim) > abs(b1))
+```
+
+## Simulation-Based F-Test
+
+When testing for a relationship between the response variable and a categorical variable with more than 2 categories, we first use the F-statistic to capture the maginitude of differences between groups. The process is similar to the one above, with the exception that we recored the value of F, rather than $b_1$.   
+
+### Simulation-Based F-Test Example
+
+```{r}
+Cars_M_Size <- lm(data=Cars2015, LowPrice~Size)
+Fstat <- summary(Cars_M_Size)$fstatistic[1] # record value of F-statistic from actual data
+
+# perform simulation
+FSim <- rep(NA, 10000)          # vector to hold results
+ShuffledCars <- Cars2015    # create copy of dataset
+for (i in 1:10000){
+  #randomly shuffle acceleration times
+ShuffledCars$Size <- ShuffledCars$Size[sample(1:nrow(ShuffledCars))] 
+ShuffledCars_M<- lm(data=ShuffledCars, LowPrice ~ Size)   #fit model to shuffled data
+FSim[i] <- summary(ShuffledCars_M)$fstatistic[1]  # record F from shuffled model
+}
+CarSize_SimulationResults <- data.frame(FSim)  #save results in dataframe
+```
+
+Create the histogram of the sampling distribution for $F$. 
+
+```{r, fig.height=2}
+CarSize_SimulationResults_Plot <- ggplot(data=CarSize_SimulationResults, aes(x=FSim)) + 
+  geom_histogram(fill="lightblue", color="white") +  
+  geom_vline(xintercept=c(Fstat), color="red") + 
+  xlab("Simulated Value of F") + ylab("Frequency") +  
+  ggtitle("Distribution of F under assumption of no relationship")
+CarSize_SimulationResults_Plot
+```
+
+
+Calculate the p-value:
+
+```{r}
+mean(FSim > Fstat)
+```
+
+
+## Testing for Differences Between Groups
+
+If we find differences in the F-statistic, we should test for differences between individual groups, or categories.   
+
+In this example, those are given by $b_1$, $b_2$, and $b_1-b_2$. When considering p-values, keep in mind that we are perfoming multiple tests simultaneously, so we should use a multiple-testing procedure, such as the  Bonferroni correction.   
+
+### Differences Between Groups Example
+
+```{r}
+b1 <- Cars_M_Size$coefficients[2]  #record b1 from actual data
+b2 <- Cars_M_Size$coefficients[3]  #record b2 from actual data
+
+# perform simulation
+b1Sim <- rep(NA, 10000)          # vector to hold results
+b2Sim <- rep(NA, 10000)          # vector to hold results
+ShuffledCars <- Cars2015    # create copy of dataset
+for (i in 1:10000){
+  #randomly shuffle acceleration times
+ShuffledCars$Size <- ShuffledCars$Size[sample(1:nrow(ShuffledCars))] 
+ShuffledCars_M<- lm(data=ShuffledCars, LowPrice ~ Size)   #fit model to shuffled data
+b1Sim[i] <- ShuffledCars_M$coefficients[2]   # record b1 from shuffled model
+b2Sim[i] <- ShuffledCars_M$coefficients[3]   # record b2 from shuffled model
+}
+Cars_Size2_SimulationResults <- data.frame(b1Sim, b2Sim)  #save results in dataframe
+```
+
+Sampling Distribution for $b_1$
+
+```{r, fig.height=2}
+Cars_Size2_SimulationResultsPlot_b1 <- ggplot(data=Cars_Size2_SimulationResults, aes(x=b1Sim)) + 
+  geom_histogram(fill="lightblue", color="white") + 
+  geom_vline(xintercept=c(b1, -1*b1), color="red") + 
+  xlab("Simulated Value of b1") + ylab("Frequency") + 
+  ggtitle("Large vs Midsize Cars: Distribution of b1 under assumption of no relationship")
+Cars_Size2_SimulationResultsPlot_b1
+```
+
+p-value:
+
+```{r}
+mean(abs(b1Sim)>abs(b1))
+```
+
+
+Sampling Distribution for $b_2$
+
+```{r, fig.height=2}
+Cars_Size2_SimulationResultsPlot_b2 <- ggplot(data=Cars_Size2_SimulationResults, aes(x=b2Sim)) + 
+  geom_histogram(fill="lightblue", color="white") + 
+  geom_vline(xintercept=c(b2, -1*b2), color="red") + 
+  xlab("Simulated Value of b2") + ylab("Frequency") + 
+  ggtitle("Large vs Small Cars: Distribution of b2 under assumption of no relationship")
+Cars_Size2_SimulationResultsPlot_b2
+```
+
+p-value:
+
+```{r}
+mean(abs(b2Sim)>abs(b2))
+```
+
+Sampling Distribution for $b_1 - b_2$
+
+```{r, fig.height=2}
+Cars_Size2_SimulationResultsPlot_b1_b2 <- ggplot(data=Cars_Size2_SimulationResults, 
+                                                 aes(x=b1Sim-b2Sim)) + 
+  geom_histogram(fill="lightblue", color="white") + 
+  geom_vline(xintercept=c(b1-b2, -1*(b1-b2)), color="red") + 
+  xlab("Simulated Value of b1-b2") + ylab("Frequency") + 
+  ggtitle("Small vs Midsize Cars: Distribution of b1-b2 under assumption of no relationship")
+Cars_Size2_SimulationResultsPlot_b1_b2
+```
+
+p-value:
+
+```{r}
+mean(abs(b1Sim-b2Sim)>abs(b1-b2))
+```
+
+
+## "Theory-Based" Tests and Intervals in R
+
+The quantity Pr(>|t|) in the coefficients table contains p-values pertaining to the test of the null hypothesis that that parameter is 0.   
+
+The `confint()` command returns confidence intervals for the regression model parameters. 
+
+The `aov()` command displays the F-statistic and p-value, as well as the sum of squared residuals and sum of squares explained by the model.
+
+### Example "Theory-Based" Test and Interval
+
+```{r}
+summary(Cars_M_A060)
+```
+
+
+```{r}
+confint(Cars_M_A060, level=0.95)
+```
+
+### Example Theory-Based F-Test
+
+```{r}
+summary(Cars_M_A060)
+```
+
+```{r}
+Cars_A_Size <- aov(data=Cars2015, LowPrice~Size)
+summary(Cars_A_Size)
+```
+
+```{r}
+confint(Cars_A_Size)
+```
+
+
+
+
+# The Normal Error Linear Regression Model
+
+##  Section 5.1 `pt()` and `q(t)` 
+
+If we want to calculate a t-statistic ourselves, we can divide the estimate, minus the associated hypothesized parameter value, by its standard error, and then using the `pt()` to obtain the p-value. We need to multiply by 2 to get values as extreme as ours in either tail of the t-distribution. Also enter the degrees of freedom associated with the residual standard error in the R output.  
+
+### Calculating  t-Statistic
+
+```{r}
+b1 <- summary(Cars_M_A060)$coeff[2,1]
+SEb1 <- summary(Cars_M_A060)$coeff[2,2]
+ts <- (b1-0)/SEb1
+2*pt(-abs(ts), df=108)
+```
+
+If we want to calculate confidence intervals with a level of confidence other than 95%, we can get the appropriate multiplier using the `qt()` command. For a A% interval, use an argument of (1-A/100)/2 to get the appropriate multiplier. 
+
+
+### Obtaining p-value using `qt()`
+
+```{r}
+abs(qt((1-.99)/2, df=108))
+```
+
+## Confidence and Prediction Intervals
+
+To calculate a 95% confidence interval for the average response, given a specified value of the explanatory variable, use the `predict()` command and specify `interval="confidence"`.
+
+To calculate a 95% prediction interval for a new observation, given a specified value of the explanatory variable, use the `predict()` command and specify `interval="predict"`.
+
+### Confidence and Prediction Interval Example:
+
+95% confidence interval for mean price among all cars that can accelerate from 0 to 60 mph in 7 seconds.
+
+```{r}
+predict(Cars_M_A060, newdata=data.frame(Acc060=7), interval="confidence", level=0.95)
+```
+
+95% prediction interval for price of an individual car that can accelerate from 0 to 60 mph in 7 seconds.
+
+```{r}
+predict(Cars_M_A060, newdata=data.frame(Acc060=7), interval="prediction", level=0.95)
+```
+
+## Plots for Checking Model Assumptions
+
+To check model assumptions, we use a plot of residuals vs predicted values, a histogram of the residuals, and a normal quantile-quantile plot. Code to produce each of these is given below. 
+
+To put the graphs side-by-side, we use the `grid.arrange()` function in the `gridExtra()` package. 
+
+### Residual Plot, Histogram, and Normal QQ Plot
+
+```{r, fig.width=10}
+library(gridExtra)
+P1 <- ggplot(data=data.frame(Cars_M_A060$residuals), 
+             aes(y=Cars_M_A060$residuals, x=Cars_M_A060$fitted.values)) + 
+  geom_point() + ggtitle("Cars Model Residual Plot") + 
+  xlab("Predicted Values") + ylab("Residuals")
+P2 <- ggplot(data=data.frame(Cars_M_A060$residuals), 
+             aes(x=Cars_M_A060$residuals)) + geom_histogram() + 
+  ggtitle("Histogram of Residuals") + xlab("Residual")
+P3 <- ggplot(data=data.frame(Cars_M_A060$residuals), 
+             aes(sample = Cars_M_A060$residuals)) + 
+  stat_qq() + stat_qq_line() + xlab("Normal Quantiles") + 
+  ylab("Residual Quantiles") + ggtitle("Cars Model QQ Plot")
+grid.arrange(P1, P2, P3, ncol=3)
+```
+
+## Section 5.4: Transformations
+
+When residual plots reveal issues with model assumptions, we can try modeling a transformation of the response variable, such as `log()`.  
+
+### Model with Transformation
+
+```{r}
+Cars_M_Log <- lm(data=Cars2015, log(LowPrice)~Acc060)
+summary(Cars_M_Log)
+```
+
+When making predictions, we need to exponentiate. 
+
+```{r}
+exp(predict(Cars_M_Log, newdata=data.frame(Acc060=c(7)), interval="prediction", level=0.95))
+```
+
+Likewise, we are interested in $e^{b_j}$.
+
+```{r}
+exp(confint(Cars_M_Log))
+```
+
+
+
+# Logistic Regression
+
+We'll load the Default dataset used in the notes.
+```{r}
+library(ISLR)
+data(Default)
+#convert default from yes/no to 0/1
+Default$default <- as.numeric(Default$default=="Yes") 
+```
+
+
+## Section 6.1: Visualizing the Logistic Curve
+
+Template:
+
+```{r, fig.height=3, fig.width=8, message=FALSE, warning=FALSE, eval=FALSE}
+ggplot(data=Dataset_Name, aes(y=Response_Variable, x= Explanatory_Variable)) +
+  geom_point(alpha=0.2) + 
+  stat_smooth(method="glm", se=FALSE, method.args = list(family=binomial)) 
+```
+
+### Visualizing Logistic Regression
+
+```{r, fig.height=3, fig.width=8, message=FALSE, warning=FALSE}
+ggplot(data=Default, aes(y=default, x= balance)) + geom_point(alpha=0.2) + 
+  stat_smooth(method="glm", se=FALSE, method.args = list(family=binomial)) 
+```
+
+
+## Fitting Logistic Regression Model
+
+### Logistic Regression Template
+
+Template:
+
+```{r, eval=FALSE}
+M <- glm(data=Dataset_Name, Response_Variable ~ Explanatory_Variable, 
+         family = binomial(link = "logit"))
+summary(M)
+```
+
+### Logistic Regression Example
+
+```{r}
+CCDefault_M <- glm(data=Default, default ~ balance, family = binomial(link = "logit"))
+summary(M)
+```
+
+### Intervals and Predictions in Logistic Regression
+
+The `confint()` command returns the model coefficient.
+
+```{r}
+confint(CCDefault_M, level = 0.95)
+```
+
+Often, we are interested in $e^{b_j}$. We can calculate this using `exp()`
+
+```{r}
+exp(confint(CCDefault_M, level = 0.95))
+```
+
+To obtain  predictions as probabilities, use `type="response"`. 
+
+```{r}
+predict(CCDefault_M, newdata=data.frame((balance=1000)), type="response")
+```
+
+
+
+# Building Models for Interpretation
+
+## Plots for Model Selection
+
+### Correlation Matrix and Plot
+
+```{r, fig.height=4, fig.width=6}
+Cars_Cat <- select_if(Cars2015, is.factor)
+summary(Cars_Cat)
+Cars_Num <- select_if(Cars2015, is.numeric)
+C <- cor(Cars_Num, use = "pairwise.complete.obs")
+round(C,2)
+```
+
+
+```{r, fig.height=4, fig.width=6}
+library(corrplot)
+C <- corrplot(C)
+```
+
+## Residual by Explanatory Variable Plots
+
+First, we fit a model:
+
+```{r}
+Cars_M6 <- lm(data=Cars2015, log(LowPrice) ~ QtrMile + Weight + HwyMPG)
+summary(Cars_M6)
+```
+
+### Creating Residual by Explanatory Variable Plot
+
+The code for residual by explanatory plot is shown. More plots can be added if there are additional explanatory variables. 
+
+```{r, fig.width=9}
+P1 <- ggplot(data=data.frame(Cars_M6$residuals), 
+             aes(y=Cars_M6$residuals, x=Cars_M6$model$QtrMile)) + 
+  geom_point() + ggtitle("Cars Model Residual Plot") + 
+  xlab("Quarter Mile Time") + ylab("Residuals") 
+P2 <- ggplot(data=data.frame(Cars_M6$residuals), 
+             aes(y=Cars_M6$residuals, x=Cars_M6$model$Weight)) + 
+  geom_point() + ggtitle("Cars Model Residual Plot") + 
+  xlab("Weight") + ylab("Residuals")
+grid.arrange(P1, P2, ncol=2)
+```
+
+
+## Section 7.3 Polynomial Regression
+
+### Plotting Polynomial Curves
+
+```{r, fig.height=4, fig.width=8}
+ggplot(data=Cars2015, aes(y=LowPrice, x=FuelCap)) +
+  geom_point()+ stat_smooth(method="lm", se=FALSE) + 
+  stat_smooth(method="lm", se=TRUE, fill=NA,formula=y ~ poly(x, 2, raw=TRUE),colour="red") + 
+  stat_smooth(method="lm", se=TRUE, fill=NA,formula=y ~ poly(x, 3, raw=TRUE),colour="green") + 
+  stat_smooth(method="lm", se=TRUE, fill=NA,formula=y ~ poly(x, 4, raw=TRUE),colour="orange") + 
+  stat_smooth(method="lm", se=TRUE, fill=NA,formula=y ~ poly(x, 5, raw=TRUE),colour="purple") + 
+  stat_smooth(method="lm", se=TRUE, fill=NA,formula=y ~ poly(x, 6, raw=TRUE),colour="darkgreen")
+```
+
+
+### Fitting Polynomial Models
+
+To fit a model with  higher powers, use `I(Variable^k)`.
+
+```{r}
+CarLength_M1 <- lm(data=Cars2015, LowPrice~FuelCap)
+CarLength_M2 <- lm(data=Cars2015, LowPrice~FuelCap + I(FuelCap^2))
+CarLength_M3 <- lm(data=Cars2015, LowPrice~FuelCap + I(FuelCap^2) + I(FuelCap^3))
+CarLength_M4 <- lm(data=Cars2015, LowPrice~FuelCap + I(FuelCap^2) + I(FuelCap^3) + I(FuelCap^4))
+CarLength_M5 <- lm(data=Cars2015, LowPrice~FuelCap + I(FuelCap^2) + I(FuelCap^3) + I(FuelCap^4) + 
+                     I(FuelCap^5))
+CarLength_M6 <- lm(data=Cars2015, LowPrice~FuelCap + I(FuelCap^2) + I(FuelCap^3) + I(FuelCap^4) + 
+                     I(FuelCap^5)+ I(FuelCap^6))
+```
+
+We can view the model summary, using the `summary()` command, as usual. 
+
+## Adjusted $R^2$, AIC, and BIC
+
+We'll calculate ddjusted $R^2$, AIC, and BIC, for Model M6, above. 
+
+### Example: Calculating adjusted $R^2$, AIC, and BIC
+
+```{r}
+summary(CarLength_M6)$adj.r.squared
+AIC(CarLength_M6)
+BIC(CarLength_M6)
+```
+
+
+
+
+# Building Models For Prediction
+
+## Variable Engineering
+
+Often, it is beneficial to create new variables, or transform existing variables into different forms before fitting a model. Here are some examples, using a dataset on AirBnB's in major US cities. 
+
+```{r}
+Train <- read.csv("Train.csv")
+Test <- read.csv("Test.csv")
+```
+
+We convert the host response rate variable to numeric. 
+
+```{r}
+Train$host_response_rate <- str_remove(Train$host_response_rate, "%")
+Test$host_response_rate <- str_remove(Test$host_response_rate, "%")
+Train$host_response_rate <- as.numeric(as.character(Train$host_response_rate))
+Test$host_response_rate <- as.numeric(as.character(Test$host_response_rate))
+```
+
+1. group together infrequent property types into a category called "other". We keep the four most frequent categories: apartment, house, townhouse, and condominium.  
+2. create a yes/no variable for whether or not there was an online review.    
+3. modify the `host_has_profile_pic` and `host_identity_verified` variables to group missing values and false's together.    
+4. create a variable to tell whether the last review was made on a weekend. 
+
+```{r}
+Train <- Train %>% mutate(property_type = fct_lump(property_type, n=4),
+                                            has_review = !is.na(review_scores_rating), 
+                                            host_has_profile_pic = host_has_profile_pic=="t", 
+                                            host_identity_verified = host_identity_verified =="t", 
+                                            weekend = weekdays(as.Date(last_review)) %in% c("Saturday", "Sunday")
+                                            )
+Test <- Test %>% mutate(property_type = fct_lump(property_type, n=4),
+                                            has_review = !is.na(review_scores_rating),
+                                            host_has_profile_pic = host_has_profile_pic=="t", 
+                                            host_identity_verified = host_identity_verified =="t",
+                                            weekend = weekdays(as.Date(last_review)) %in% c("Saturday", "Sunday")
+                                            )
+```
+
+
+## Model Evaluation
+
+The `caret()` (Classification And REgression Training) package is useful for comparing and evaluating models using cross-validation. The `train()` function performs cross validation.
+
+```{r}
+library(caret)
+```
+
+We must first impute missing values, as `train()` will not work with missing values. 
+
+```{r}
+preProcValues <- preProcess(Train%>%select(-c(price)), method = c("medianImpute"))
+Train <- predict(preProcValues, Train)
+Test <- predict(preProcValues, Test)
+```
+
+The `trainControl()` function allows us to set the number of folds, and repeats in our cross-validation procedure. 
+
+```{r}
+control <- trainControl(method="repeatedcv", number=5, repeats=5 )
+```
+
+It is important to set the same seed before each training procedure to ensure that the models are compared on the same partitions of training and validation data. 
+
+```{r, message=FALSE, warning=FALSE}
+set.seed(11082020)
+model1 <- train(data=Train, price ~ bedrooms,  method="lm", trControl=control)
+set.seed(11082020)
+model2 <- train(data=Train, price ~ bedrooms + accommodates + bathrooms + beds,  
+                method="lm", trControl=control)
+set.seed(11082020)
+model3 <- train(data=Train, price ~ bedrooms * accommodates * bathrooms * beds,  
+                method="lm", trControl=control)
+set.seed(11082020)
+model4 <- train(data=Train, price ~ bedrooms + city + room_type ,  
+                method="lm", trControl=control)
+set.seed(11082020)
+model5 <- train(data=Train, price ~ bedrooms * city * room_type ,  
+                method="lm", trControl=control)
+set.seed(11082020)
+model6 <- train(data=Train, price ~ bedrooms + accommodates + bathrooms + beds + city +room_type +  
+                  cancellation_policy + cleaning_fee ,  
+                method="lm", trControl=control)
+set.seed(11082020)
+#exclude latitude, longitude, id, zipcode, weekday, weekend
+model7 <- train(data=Train, price ~ property_type + bed_type + host_has_profile_pic + bedrooms +  
+                  accommodates + bathrooms + beds + city +room_type + cancellation_policy +  
+                  cleaning_fee + host_identity_verified + host_response_rate + instant_bookable + 
+                  number_of_reviews + review_scores_rating+ has_review,  method="lm", trControl=control)
+set.seed(11082020)
+model8 <- train(data=Train, price ~ .,  method="lm", trControl=control)
+```
+
+We extract the RMSPE for each method and record it in a table. Note that R calls this `RMSE`, even though `RMSPE` is really a more accurate term, since it is computed on data that were withheld when fitting the model.  
+
+```{r}
+r1 <- model1$results$RMSE
+r2 <- model2$results$RMSE
+r3 <- model3$results$RMSE
+r4 <- model4$results$RMSE
+r5 <- model5$results$RMSE
+r6 <- model6$results$RMSE
+r7 <- model7$results$RMSE
+r8 <- model8$results$RMSE
+Model <- 1:8
+RMSE <- c(r1, r2, r3, r4, r5, r6, r7, r8)
+T <- data.frame(Model, RMSE)
+kable(T)
+```
+
+## Predictions on Test Data
+
+Having identified the best model through cross-validation, we'll fit that model to the full training set and use it to make predictions on the test data. 
+
+```{r}
+M1 <- lm(data=Train, price ~ bedrooms + accommodates + bathrooms + 
+           beds + city +room_type + cancellation_policy + cleaning_fee)
+```
+
+
+Sometimes, we encounter a categorical variable with a category that shows up in the test data, but not the training data. If this happens, the model will not be able to make predictions. The best option is to change the category to one that is most similar in the training data. This can be done using the `recode()` function. 
+
+```{r}
+Test$cancellation_policy <- recode(Test$cancellation_policy, super_strict_60="super_strict_30")
+```
+
+Now, we make the predictions on the new data.
+
+```{r}
+Predictions <- predict(M1, newdata=Test)
+```
+
+We record the predicted prices in the column Test$price. 
+
+```{r}
+Test$price <- Predictions
+```
+
+We create a .csv file with the predictions. The .csv file will be created and saved in the working directory you are currently in. Be sure this is where you want it to be by navigating the the desired directory in the lower right RStudio window, andchoosing "More -> Set as Working Directory".
+
+
+```{r, eval=FALSE}
+write.csv(Test, file="Test_predictions.csv")
+```
+
+# Advanced Regression and Nonparametric Approaches
+
+## Ridge and Lasso Regression
+
+The `lm.ridge()` and command, in the `MASS` package, can be used to fit a ridge regression model.  
+
+We first need to standardize each quantitative variable. This is done using the `scale()` command in R.  
+
+```{r}
+Train_sc <- Train %>% mutate_if(is.numeric, scale)
+```
+
+
+### Fitting a Ridge Regression Model
+
+We can perform ridge regression using the `lm.ridge()` command in  the `MASS` package. 
+
+```{r, cache=FALSE}
+library(MASS)
+```
+
+```{r}
+M_Ridge1 <- lm.ridge(data=Train_sc, price~., lambda = 1)
+head(M_Ridge1$coef)
+```
+
+
+### Cross Validation with Ridge
+
+We perform cross-validation to determine the optimal value of $\lambda$. The command `10^seq(-3, 3, length = 100)` defines values between 0 and 1000 for $\lambda$, which will be tested in cross-validation. 
+
+This requires the `glmnet` package. 
+
+```{r}
+library(glmnet)
+```
+
+```{r}
+control = trainControl("repeatedcv", number = 5, repeats=5)
+l_vals = 10^seq(-3, 3, length = 100)
+
+set.seed(11162020)
+AirBnB_ridge <- train(price ~., data = Train_sc, method = "glmnet", trControl=control , 
+                      tuneGrid=expand.grid(alpha=0, lambda=l_vals))
+```
+
+Identify the optimal $\lambda$. 
+
+```{r}
+AirBnB_ridge$bestTune$lambda
+```
+
+Plot of RMSPE for each value of $\lambda$. 
+
+```{r}
+lambda <- AirBnB_ridge$results$lambda
+RMSPE <- AirBnB_ridge$results$RMSE
+ggplot(data=data.frame(lambda, RMSPE), aes(x=lambda, y=RMSPE))+
+  geom_line() + xlim(c(0,2)) + ylim(c(0.75, 0.82)) + 
+  ggtitle("Ridge Regression Cross Validation Results")
+```
+
+
+### Cross-validation with Lasso Regression
+
+For lasso regression, set `alpha=1`. 
+
+```{r}
+control = trainControl("repeatedcv", number = 5, repeats=5)
+l_vals = 10^seq(-3, 3, length = 100)
+
+set.seed(11162020)
+AirBnB_lasso <- train(price ~., data = Train_sc, method = "glmnet", trControl=control , 
+                      tuneGrid=expand.grid(alpha=1, lambda=l_vals))
+```
+
+Identify the optimal $\lambda$. 
+
+```{r}
+AirBnB_lasso$bestTune$lambda
+```
+
+Plot of RMSPE for each value of $\lambda$. 
+
+```{r}
+lambda <- AirBnB_lasso$results$lambda
+RMSPE <- AirBnB_lasso$results$RMSE
+ggplot(data=data.frame(lambda, RMSPE), aes(x=lambda, y=RMSPE))+geom_line() + 
+  xlim(c(0,0.2)) + ylim(c(0.75, 0.82)) + 
+  ggtitle("Lasso Regression Cross Validation Results")
+```
+
+
+## Decision Trees
+
+We use the `rpart` package to grow trees, and the `rpart.plot` package to visualize them. 
+
+```{r}
+library(rpart)
+library(rpart.plot)
+```
+
+```{r, echo=FALSE}
+Train <- Train %>% dplyr::select(-c(last_review))
+Test <- Test %>% dplyr::select(-c(last_review))
+```
+
+The `cp` parameter is a complexity parameter that determines the depth of the tree. The smaller the value of `cp`, the deeper the tree. 
+
+
+### Decision Tree Example
+
+```{r, fig.height=4.5, fig.width=11}
+tree <- rpart(price~., data=Train, cp=0.02)
+rpart.plot(tree, box.palette="RdBu", shadow.col="gray", nn=TRUE, cex=1, extra=1)
+```
+
+We can use cross-validation to determine the optimal value of `cp`. 
+
+```{r}
+cp_vals = 10^seq(-3, 3, length = 100)
+set.seed(11162020)
+AirBnB_Tree <- train(data=Train_sc, price ~ .,  method="rpart", trControl=control, 
+                     tuneGrid=expand.grid(cp=cp_vals))
+AirBnB_Tree$bestTune
+```
