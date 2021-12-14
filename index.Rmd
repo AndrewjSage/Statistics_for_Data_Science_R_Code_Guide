@@ -16,7 +16,7 @@ github-repo: rstudio/bookdown-demo
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE, cache=TRUE)
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE, cache=FALSE)
 ```
 
 
@@ -873,6 +873,7 @@ set.seed(09262020)
 ```
 
 
+
 ### Template for Bootstrap
 
 ```{r, eval=FALSE}
@@ -884,7 +885,7 @@ statistic3 <- rep(NA, 10000) # create vector to store bootstrap results for thir
 
 # for loop
 for (i in 1:10000){
-BootstrapSample <- sample_n(DatasetName, samplesize, replace="TRUE")  
+BootstrapSample <- sample_n(DatasetName, samplesize, replace=TRUE)  
 statistic1[i] <- #calculate first statistic on bootstrap sample
 statistic2[i] <- #calculate second statistic on bootstrap sample
 statistic3[i] <- #calculate third statistic on bootstrap sample
@@ -893,21 +894,22 @@ statistic3[i] <- #calculate third statistic on bootstrap sample
 Bootstrap_Results <- data.frame(statistic1, statistic2, statistic3)
 ```
 
-### Bootstrap for Difference in Proportion Supporting Candidates
 
-Bootstrap difference in proportion supporting each 2020 candidate, using results from Washington Post Poll in September 2020. 
+### Bootstrap for Proportion of Blue M&M's
+
+
 
 ```{r}
-Vote <- c(rep("Biden", 351), rep("Trump", 323), rep("Other", 28))
-Sample <- data.frame(Vote)
+Color <- c(rep("Blue", 6), rep("Orange", 3), rep("Green", 2), rep("Yellow", 2), 
+           rep("Red", 1))
+Sample <- data.frame(Color)
 
-Difference <- rep(NA, 10000)
+Proportion_Blue <- rep(NA, 10000)
 for (i in 1:10000){
-BootstrapSample <- sample_n(Sample, 702, replace=TRUE) 
-Difference[i] <- (sum(BootstrapSample$Vote=="Biden") - 
-                    sum(BootstrapSample$Vote=="Trump"))/702
+BootstrapSample <- sample_n(Sample, 14, replace=TRUE) 
+Proportion_Blue[i] <- sum(BootstrapSample$Color=="Blue")/14
 }
-Vote_BootstrapResults <- data.frame(Difference)
+Candy_Bootstrap_Results <- data.frame(Proportion_Blue)
 ```
 
 
@@ -952,14 +954,11 @@ When performing the bootstrap, we sample the same number of observations from ea
 ```{r}
 b1 <- rep(NA, 10000)  #vector to store b1 values
 for (i in 1:10000){
-  # sample 33 northern lakes
-NLakes <- sample_n(FloridaLakes %>% filter(Location=="N"), 33, replace=TRUE)   
- # sample 20 southern lakes
-SLakes <- sample_n(FloridaLakes %>% filter(Location=="S"),  20, replace=TRUE)  
+NLakes <- sample_n(FloridaLakes %>% filter(Location=="N"), 33, replace=TRUE)   # sample 33 northern lakes
+SLakes <- sample_n(FloridaLakes %>% filter(Location=="S"), 20, replace=TRUE)   # sample 20 southern lakes
 BootstrapSample <- rbind(NLakes, SLakes)   # combine Northern and Southern Lakes
 M <- lm(data=BootstrapSample, AvgMercury ~ Location) # fit linear model
-# record b1 (note indexing in coefficents starts at 1, so b0=coef(M)[1], and b1=coef(M)[2], etc.)
-b1[i] <- coef(M)[2] 
+b1[i] <- coef(M)[2] # record b1 (note indexing in coefficents starts at 1, so b0=coef(M)[1], and b1=coef(M)[2], etc.)
 }
 NS_Lakes_Bootstrap_Results <- data.frame(b1)  #save results as dataframe
 ```
@@ -976,8 +975,7 @@ b3 <- rep(NA, 10000)
 for (i in 1:10000){
 BootstrapSample <- sample_n(Bears_Subset, 97, replace=TRUE) #take bootstrap sample
 M <- lm(data=BootstrapSample, Weight ~ Age*Sex) # fit linear model
-#(note indexing in coefficents starts at 1, so b0=coef(M)[1], and b1=coef(M)[2], etc.)
-b0[i] <- coef(M)[1] # record b0 
+b0[i] <- coef(M)[1] # record b0 (note indexing in coefficents starts at 1, so b0=coef(M)[1], and b1=coef(M)[2], etc.)
 b1[i] <- coef(M)[2] # record b1
 b2[i] <- coef(M)[3] # record b2
 b3[i] <- coef(M)[4] # record b3
@@ -1045,13 +1043,10 @@ We add the cutoff points for the standard error confidence interval
 Boot_Dist_Plot + geom_vline(xintercept = c(Estimate - 2*SE, Estimate + 2*SE), color="red")
 ```
 
-### Election Poll
+### M&M Proportions
 
 ```{r}
-Boot_Dist_Plot<- ggplot(data=Vote_BootstrapResults, aes(x=Difference)) + 
-  geom_histogram(fill="blue", color="white") + 
-  ggtitle("Bootstrap Distribution for Difference in Proportion") + 
-  xlab("Proportion Democratic - Proportion Republican") + ylab("Frequency") 
+Boot_Dist_Plot <- ggplot(data=Candy_Bootstrap_Results, aes(x=Proportion_Blue)) + geom_histogram(fill="blue", color="white") 
 Boot_Dist_Plot
 ```
 
@@ -1059,8 +1054,8 @@ Boot_Dist_Plot
 We calculate the 0.025 and 0.975 quantiles of the bootstrap distribution. 
 
 ```{r}
-q.025 <- quantile(Vote_BootstrapResults$Difference, 0.025)
-q.975 <- quantile(Vote_BootstrapResults$Difference, 0.975)
+q.025 <- quantile(Candy_Bootstrap_Results$Proportion_Blue, 0.025)
+q.975 <- quantile(Candy_Bootstrap_Results$Proportion_Blue, 0.975)
 c(q.025, q.975)
 ```
 
@@ -1073,14 +1068,14 @@ Boot_Dist_Plot + geom_vline(xintercept=c(q.025, q.975), color="red")
 We'll calculate the standard deviation of the bootstrap distribution, also known as the bootstrap standard error. 
 
 ```{r}
-SE <- sd(Vote_BootstrapResults$Difference)
+SE <- sd(Candy_Bootstrap_Results$Proportion_Blue)
 SE
 ```
 
 A 95% standard error confidence interval is given by:
 
 ```{r}
-Estimate <- 0.50-0.46 #difference in proportions from original sample
+Estimate <- 6/14
 ```
 
 
@@ -1294,7 +1289,6 @@ These steps are performed in the code below, using the example of price and acce
 ```{r}
 Cars_M_A060  <- lm(data=Cars2015, LowPrice~Acc060)
 b1 <- Cars_M_A060$coef[2] # record value of b1 from actual data
-
 # perform simulation
 b1Sim <- rep(NA, 10000)          # vector to hold results
 ShuffledCars <- Cars2015    # create copy of dataset
@@ -1334,7 +1328,6 @@ When testing for a relationship between the response variable and a categorical 
 ```{r}
 Cars_M_Size <- lm(data=Cars2015, LowPrice~Size)
 Fstat <- summary(Cars_M_Size)$fstatistic[1] # record value of F-statistic from actual data
-
 # perform simulation
 FSim <- rep(NA, 10000)          # vector to hold results
 ShuffledCars <- Cars2015    # create copy of dataset
@@ -1377,7 +1370,6 @@ In this example, those are given by $b_1$, $b_2$, and $b_1-b_2$. When considerin
 ```{r}
 b1 <- Cars_M_Size$coefficients[2]  #record b1 from actual data
 b2 <- Cars_M_Size$coefficients[3]  #record b2 from actual data
-
 # perform simulation
 b1Sim <- rep(NA, 10000)          # vector to hold results
 b2Sim <- rep(NA, 10000)          # vector to hold results
@@ -1545,7 +1537,7 @@ P2 <- ggplot(data=data.frame(Cars_M_A060$residuals),
              aes(x=Cars_M_A060$residuals)) + geom_histogram() + 
   ggtitle("Histogram of Residuals") + xlab("Residual")
 P3 <- ggplot(data=data.frame(Cars_M_A060$residuals), 
-             aes(sample = Cars_M_A060$residuals)) + 
+             aes(sample = scale(Cars_M_A060$residuals))) + 
   stat_qq() + stat_qq_line() + xlab("Normal Quantiles") + 
   ylab("Residual Quantiles") + ggtitle("Cars Model QQ Plot")
 grid.arrange(P1, P2, P3, ncol=3)
@@ -1930,7 +1922,6 @@ library(glmnet)
 ```{r}
 control = trainControl("repeatedcv", number = 5, repeats=5)
 l_vals = 10^seq(-3, 3, length = 100)
-
 set.seed(11162020)
 AirBnB_ridge <- train(price ~., data = Train_sc, method = "glmnet", trControl=control , 
                       tuneGrid=expand.grid(alpha=0, lambda=l_vals))
@@ -1960,7 +1951,6 @@ For lasso regression, set `alpha=1`.
 ```{r}
 control = trainControl("repeatedcv", number = 5, repeats=5)
 l_vals = 10^seq(-3, 3, length = 100)
-
 set.seed(11162020)
 AirBnB_lasso <- train(price ~., data = Train_sc, method = "glmnet", trControl=control , 
                       tuneGrid=expand.grid(alpha=1, lambda=l_vals))
